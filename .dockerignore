@@ -1,0 +1,16 @@
+# Don't copy secrets into Docker image!
+.env
+
+# Don't copy Git history
+.git
+.gitignore
+
+# Don't copy Python cache
+__pycache__
+*.pyc
+
+# Don't copy IDE files
+.vscode
+
+# Don't copy README (not needed inside container)
+README.md
