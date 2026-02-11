@@ -176,6 +176,135 @@ def describe_table(database: str, table: str) -> str:
     except Exception as e:
         return f"Error describing table: {str(e)}"
 
+@mcp.tool()
+def list_catalogs() -> str:
+    """List all catalogs in the Unity Catalog metastore"""
+    try:
+        client = get_client()
+        warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+        
+        if not warehouse_id:
+            return "Error: DATABRICKS_WAREHOUSE_ID not set"
+        
+        result = client.statement_execution.execute_statement(
+            statement="SHOW CATALOGS",
+            warehouse_id=warehouse_id
+        )
+        
+        # Extract catalog names
+        catalogs = []
+        if result.result and result.result.data_array:
+            catalogs = [row[0] for row in result.result.data_array]
+        
+        return f"Catalogs found: {len(catalogs)}\n\n" + "\n".join(f"- {cat}" for cat in catalogs)
+        
+    except Exception as e:
+        return f"Error listing catalogs: {str(e)}"
+
+
+@mcp.tool()
+def list_schemas(catalog: str) -> str:
+    """
+    List all schemas/databases in a specific catalog.
+    
+    Args:
+        catalog: Name of the catalog
+    """
+    try:
+        client = get_client()
+        warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+        
+        if not warehouse_id:
+            return "Error: DATABRICKS_WAREHOUSE_ID not set"
+        
+        result = client.statement_execution.execute_statement(
+            statement=f"SHOW SCHEMAS IN {catalog}",
+            warehouse_id=warehouse_id
+        )
+        
+        # Extract schema names
+        schemas = []
+        if result.result and result.result.data_array:
+            schemas = [row[0] for row in result.result.data_array]
+        
+        return f"Schemas in '{catalog}': {len(schemas)}\n\n" + "\n".join(f"- {schema}" for schema in schemas)
+        
+    except Exception as e:
+        return f"Error listing schemas: {str(e)}"
+
+
+@mcp.tool()
+def list_tables_full(catalog: str, schema: str) -> str:
+    """
+    List all tables in a specific catalog and schema.
+    
+    Args:
+        catalog: Name of the catalog
+        schema: Name of the schema/database
+    """
+    try:
+        client = get_client()
+        warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+        
+        if not warehouse_id:
+            return "Error: DATABRICKS_WAREHOUSE_ID not set"
+        
+        result = client.statement_execution.execute_statement(
+            statement=f"SHOW TABLES IN {catalog}.{schema}",
+            warehouse_id=warehouse_id
+        )
+        
+        # Extract table names
+        tables = []
+        if result.result and result.result.data_array:
+            # SHOW TABLES returns: catalog, database, tableName, isTemporary
+            tables = [row[2] for row in result.result.data_array]
+        
+        return f"Tables in '{catalog}.{schema}': {len(tables)}\n\n" + "\n".join(f"- {table}" for table in tables)
+        
+    except Exception as e:
+        return f"Error listing tables: {str(e)}"
+
+
+@mcp.tool()
+def describe_table_full(catalog: str, schema: str, table: str) -> str:
+    """
+    Get schema information for a specific table using full 3-part name.
+    
+    Args:
+        catalog: Name of the catalog
+        schema: Name of the schema/database
+        table: Name of the table
+    """
+    try:
+        client = get_client()
+        warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+        
+        if not warehouse_id:
+            return "Error: DATABRICKS_WAREHOUSE_ID not set"
+        
+        result = client.statement_execution.execute_statement(
+            statement=f"DESCRIBE {catalog}.{schema}.{table}",
+            warehouse_id=warehouse_id
+        )
+        
+        # Format schema information
+        output = f"Schema for {catalog}.{schema}.{table}:\n\n"
+        
+        if result.result and result.result.data_array:
+            for row in result.result.data_array:
+                col_name = row[0]
+                col_type = row[1]
+                col_comment = row[2] if len(row) > 2 else ""
+                output += f"  {col_name}: {col_type}"
+                if col_comment:
+                    output += f" -- {col_comment}"
+                output += "\n"
+        
+        return output
+        
+    except Exception as e:
+        return f"Error describing table: {str(e)}"
 
 if __name__ == "__main__":
     mcp.run()
