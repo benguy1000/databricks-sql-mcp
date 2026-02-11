@@ -51,9 +51,14 @@ Your workspace URL, e.g., `https://adb-1234567890.azuredatabricks.net`
 
 ## Running with Docker
 
-### Build the Image
+### Pull the Image from Docker Hub
 ```bash
-docker build -t databricks-sql-mcp .
+docker pull bkeeleygib/databricks-sql-mcp:latest
+```
+
+Or build it yourself:
+```bash
+docker build -t bkeeleygib/databricks-sql-mcp .
 ```
 
 ### Run with Environment Variables
@@ -62,7 +67,7 @@ docker run -i --rm \
   -e DATABRICKS_HOST="https://your-workspace.azuredatabricks.net" \
   -e DATABRICKS_TOKEN="dapi1234567890abcdef" \
   -e DATABRICKS_WAREHOUSE_ID="abc123def456" \
-  databricks-sql-mcp
+  bkeeleygib/databricks-sql-mcp:latest
 ```
 
 ### Run with .env File
@@ -99,7 +104,7 @@ docker run -i --rm --env-file .env databricks-sql-mcp
         "-e", "DATABRICKS_HOST=https://your-workspace.azuredatabricks.net",
         "-e", "DATABRICKS_TOKEN=dapi1234567890abcdef",
         "-e", "DATABRICKS_WAREHOUSE_ID=abc123def456",
-        "databricks-sql-mcp"
+        "bkeeleygib/databricks-sql-mcp:latest"
       ]
     }
   }
