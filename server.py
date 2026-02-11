@@ -128,8 +128,27 @@ def list_tables(database: str) -> str:
         # Extract table names
         tables = []
         if result.result and result.result.data_array:
-            # SHOW TABLES returns: database, tableName, isTemporary
-            tables = [row[1] for row in result.result.data_array]
+            # Get column names to understand structure
+            columns = [col.name for col in result.manifest.schema.columns]
+            
+            # Find the tableName column index
+            table_name_idx = None
+            for i, col in enumerate(columns):
+                if col.lower() in ['tablename', 'table']:
+                    table_name_idx = i
+                    break
+            
+            if table_name_idx is None:
+                # Fallback: assume it's column 1
+                table_name_idx = 1
+            
+            # Extract table names using the correct column
+            for row in result.result.data_array:
+                if len(row) > table_name_idx and row[table_name_idx]:
+                    tables.append(str(row[table_name_idx]))
+        
+        if not tables:
+            return f"No tables found in '{database}' or unable to parse results"
         
         return f"Tables in '{database}': {len(tables)}\n\n" + "\n".join(f"- {table}" for table in tables)
         
@@ -257,8 +276,27 @@ def list_tables_full(catalog: str, schema: str) -> str:
         # Extract table names
         tables = []
         if result.result and result.result.data_array:
-            # SHOW TABLES returns: catalog, database, tableName, isTemporary
-            tables = [row[2] for row in result.result.data_array]
+            # Get column names to understand structure
+            columns = [col.name for col in result.manifest.schema.columns]
+            
+            # Find the tableName column index
+            table_name_idx = None
+            for i, col in enumerate(columns):
+                if col.lower() in ['tablename', 'table']:
+                    table_name_idx = i
+                    break
+            
+            if table_name_idx is None:
+                # Fallback: assume it's column 1 (typical for SHOW TABLES)
+                table_name_idx = 1
+            
+            # Extract table names using the correct column
+            for row in result.result.data_array:
+                if len(row) > table_name_idx and row[table_name_idx]:
+                    tables.append(str(row[table_name_idx]))
+        
+        if not tables:
+            return f"No tables found in '{catalog}.{schema}' or unable to parse results"
         
         return f"Tables in '{catalog}.{schema}': {len(tables)}\n\n" + "\n".join(f"- {table}" for table in tables)
         
