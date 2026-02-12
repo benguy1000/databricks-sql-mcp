@@ -49,9 +49,44 @@ Your workspace URL, e.g., `https://adb-1234567890.azuredatabricks.net`
 2. Click on a warehouse
 3. Copy the warehouse ID from the URL (between `/warehouses/` and `?`)
 
-## Running with Docker
+## Quick Install (Recommended)
 
-### Pull the Image from Docker Hub
+The install scripts pull the Docker image, prompt for your Databricks credentials, and configure Claude Desktop automatically using the Claude CLI.
+
+### Mac / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/benguy1000/databricks-sql-mcp/master/install.sh | bash
+```
+
+Or clone the repo first:
+
+```bash
+git clone https://github.com/benguy1000/databricks-sql-mcp.git
+cd databricks-sql-mcp
+chmod +x install.sh
+./install.sh
+```
+
+### Windows
+
+```powershell
+git clone https://github.com/benguy1000/databricks-sql-mcp.git
+cd databricks-sql-mcp
+install.bat
+```
+
+After running the installer, restart Claude Desktop and you're ready to go.
+
+---
+
+## Manual Installation
+
+If you prefer to set things up manually, or if the quick install doesn't work for your setup, follow the steps below.
+
+### Running with Docker
+
+#### Pull the Image from Docker Hub
 ```bash
 docker pull bkeeleygib/databricks-sql-mcp:latest
 ```
@@ -61,7 +96,7 @@ Or build it yourself:
 docker build -t bkeeleygib/databricks-sql-mcp .
 ```
 
-### Run with Environment Variables
+#### Run with Environment Variables
 ```bash
 docker run -i --rm \
   -e DATABRICKS_HOST="https://your-workspace.azuredatabricks.net" \
@@ -70,7 +105,7 @@ docker run -i --rm \
   bkeeleygib/databricks-sql-mcp:latest
 ```
 
-### Run with .env File
+#### Run with .env File
 
 Create a `.env` file with your credentials:
 ```
@@ -81,25 +116,25 @@ DATABRICKS_WAREHOUSE_ID=abc123def456
 
 Then run:
 ```bash
-docker run -i --rm --env-file .env databricks-sql-mcp
+docker run -i --rm --env-file .env bkeeleygib/databricks-sql-mcp:latest
 ```
 
-## Using with Claude Desktop
+### Configuring Claude Desktop
 
-### Configuration File Location
+#### Configuration File Location
 
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`  
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
-### Add to Configuration
+#### Add to Configuration
 ```json
 {
   "mcpServers": {
     "databricks-sql": {
       "command": "docker",
       "args": [
-        "run", 
-        "-i", 
+        "run",
+        "-i",
         "--rm",
         "-e", "DATABRICKS_HOST=https://your-workspace.azuredatabricks.net",
         "-e", "DATABRICKS_TOKEN=dapi1234567890abcdef",
@@ -178,7 +213,7 @@ Then restart Claude Desktop.
 
 **Tables show as "false"**
 - This bug has been fixed in the latest version
-- Rebuild your Docker image: `docker build -t databricks-sql-mcp .`
+- Rebuild your Docker image: `docker build -t bkeeleygib/databricks-sql-mcp .`
 
 ## License
 
