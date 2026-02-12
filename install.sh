@@ -41,7 +41,8 @@ if [ -z "$DATABRICKS_HOST" ]; then
     exit 1
 fi
 
-read -p "Databricks Personal Access Token (starts with dapi...): " DATABRICKS_TOKEN
+read -sp "Databricks Personal Access Token (starts with dapi...): " DATABRICKS_TOKEN
+echo
 if [ -z "$DATABRICKS_TOKEN" ]; then
     echo "ERROR: Databricks Token is required."
     exit 1
