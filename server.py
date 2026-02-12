@@ -21,11 +21,14 @@ def get_client():
 def execute_sql(query: str, warehouse_id: str = None) -> str:
     """
     Execute a SQL query on Databricks.
-    
+
+    When working with wesley_farms catalog tables, consider using get_table_relationships
+    first to understand proper join logic.
+
     Args:
         query: SQL query to execute
         warehouse_id: Optional SQL warehouse ID (uses default if not provided)
-    
+
     Returns:
         Query results as formatted text
     """
@@ -77,6 +80,61 @@ def execute_sql(query: str, warehouse_id: str = None) -> str:
         
     except Exception as e:
         return f"Error executing query: {str(e)}"
+
+
+@mcp.tool()
+def get_table_relationships() -> str:
+    """
+    Get predefined table join relationships from wesley_farms.gold.table_relationships.
+    Use this when querying tables in the wesley_farms catalog to understand how tables
+    should be joined together.
+
+    Returns:
+        Formatted table join relationships showing how to join tables
+    """
+    try:
+        client = get_client()
+        warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+
+        if not warehouse_id:
+            return "Error: DATABRICKS_WAREHOUSE_ID not set"
+
+        # Query the table relationships metadata
+        result = client.statement_execution.execute_statement(
+            statement="SELECT * FROM wesley_farms.gold.table_relationships",
+            warehouse_id=warehouse_id
+        )
+
+        # Check for query failure
+        if result.status.state == StatementState.FAILED:
+            return f"Query failed: {result.status.error.message}"
+
+        # Format results
+        if not result.result or not result.result.data_array:
+            return "No table relationships found in wesley_farms.gold.table_relationships"
+
+        # Get column names
+        columns = [col.name for col in result.manifest.schema.columns]
+
+        # Get data rows
+        rows = result.result.data_array
+
+        # Format as readable join relationships
+        output = "TABLE JOIN RELATIONSHIPS (wesley_farms.gold)\n"
+        output += "=" * 60 + "\n\n"
+        output += f"Total relationships defined: {len(rows)}\n\n"
+
+        for i, row in enumerate(rows, 1):
+            row_dict = dict(zip(columns, row))
+            output += f"Relationship {i}:\n"
+            for col, val in row_dict.items():
+                output += f"  {col}: {val}\n"
+            output += "\n"
+
+        return output
+
+    except Exception as e:
+        return f"Error retrieving table relationships: {str(e)}"
 
 
 @mcp.tool()
